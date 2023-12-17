@@ -1,0 +1,30 @@
+#ansible-playbook -i inventory/kpn.yaml playbook/evpn-vpws.yaml
+---
+- name: Apply EVPN-VPWS Configuration 
+#  hosts: acx:svc
+  hosts: acx
+  connection: juniper.device.pyez
+  gather_facts: false
+  tags: juniper
+
+  vars:
+    config_dir: "configs/kpn/services/evpn-vpws"
+    config_filename: "{{ config_dir }}/{{ inventory_hostname }}.cfg"
+
+  tasks:
+    - name: Generate Config
+      command: "python3 {{ playbook_dir }}/library/evpn-vpws.py {{ lo0 }} {{ evpn_vpws.iface }} {{ evpn_vpws.esi_base }} \
+                     {{ evpn_vpws.local_id }} {{ evpn_vpws.remote_id }} {{ evpn_vpws.site_id }} {{ evpn_vpws.vlan_start }} {{ evpn_vpws.vlan_end }}"
+      register: config
+ 
+    - name: copy the output to a local file
+      copy:
+        content: "{{ config.stdout }}"
+        dest: "{{ config_filename }}"  
+
+    - name: Apply Configuration
+      junos_config:
+        update: replace
+        src: "{{ config_filename }}"
+        src_format: set
+      register: response

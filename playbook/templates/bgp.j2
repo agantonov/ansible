@@ -1,0 +1,29 @@
+protocols {
+    bgp {
+        group INTERNAL {
+            type internal;
+            local-address {{ lo0 }};
+            family inet-vpn {
+                unicast;
+            }
+            family inet6-vpn {
+                unicast;
+            }
+            family l2vpn {
+                signaling;
+            }
+            family evpn {
+                signaling;
+            }
+            family inet-mvpn {
+                signaling;
+            }
+            bfd-liveness-detection {
+                minimum-interval 300;
+                multiplier 3;
+            }
+            neighbor 1.1.0.101;
+            neighbor 1.1.0.102;
+        }
+    }
+}

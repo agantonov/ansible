@@ -1,0 +1,38 @@
+routing-instances {
+{% for vrf in vrfs %}
+    {{ vrf.name }} {
+        instance-type vrf;
+        routing-options {
+            router-id {{ vrf.router_id }};
+        }
+        protocols {
+{% for protocol in vrf.protocols %}
+{% if protocol.name == 'bgp' %}
+           bgp {
+{% for group in protocol.groups %}
+                group {{ group.name }} {
+                    local-address {{ group.local_address }};
+                    peer-as {{ group.peer_as }};
+                    family {
+{% for family in group.family %}
+                        {{ family }};
+{% endfor %}
+                    }
+{% for neighbor in group.neighbors %}
+                    neighbor {{ neighbor }};
+{% endfor %}
+                }
+{% endfor %}
+           }
+{% endif %}
+        }
+{% endfor %}
+{% for interface in vrf.interfaces %}
+        interface {{ interface }};
+{% endfor %}
+        route-distinguisher {{ vrf.route_distinguisher }};
+        vrf-target target:{{ vrf.vrf_target }};
+        vrf-table-label;
+    }
+{% endfor %}
+}

@@ -1,0 +1,121 @@
+#ansible-playbook -i inventory/kpn.yaml playbook/acx7509-new-ifaces.yaml
+---
+- name: Apply EVPN-VPWS Configuration 
+  hosts: acx7509-2:acx7509-3
+  connection: juniper.device.pyez
+  gather_facts: false
+  tags: juniper
+
+  vars:
+    config_dir_vpws: "configs/kpn/services/evpn-vpws"
+    config_filename_vpws: "{{ config_dir_vpws }}/{{ inventory_hostname }}-evpn-vpws-ae38-ae30.cfg"
+    config_dir_elan: "configs/kpn/services/evpn-elan"
+    config_filename_elan: "{{ config_dir_elan }}/{{ inventory_hostname }}-evpn-elan-ae38-ae30.cfg"
+    config_dir_l3vpn: "configs/kpn/services/l3vpn"
+    config_filename_l3vpn: "{{ config_dir_l3vpn }}/{{ inventory_hostname }}-l3vpn-ae38-ae30.cfg"
+
+  tasks:
+####### VPWS
+    - name: Generate ae38 VPWS Config 
+      command: "python3 {{ playbook_dir }}/library/evpn-vpws-aa.py {{ lo0 }} {{ evpn_vpws_38.iface }} {{ evpn_vpws_38.esi_base }} \
+                     {{ evpn_vpws_38.local_id }} {{ evpn_vpws_38.remote_id }} {{ evpn_vpws_38.site_id }} {{ evpn_vpws_38.vlan_start }} {{ evpn_vpws_38.vlan_end }}"
+      register: config_vpws_ae38
+ 
+    - name: copy the output to a local file
+      copy:
+        content: "{{ config_vpws_ae38.stdout }}"
+        dest: "{{ config_filename_vpws }}"  
+
+#    - name: Apply VPWS Configuration
+#      junos_config:
+#        update: replace
+#        src: "{{ config_filename_vpws }}"
+#        src_format: set
+#      register: response
+
+    - name: Generate ae39 VPWS Config 
+      command: "python3 {{ playbook_dir }}/library/evpn-vpws-aa.py {{ lo0 }} {{ evpn_vpws_39.iface }} {{ evpn_vpws_39.esi_base }} \
+                     {{ evpn_vpws_39.local_id }} {{ evpn_vpws_39.remote_id }} {{ evpn_vpws_38.site_id }} {{ evpn_vpws_39.vlan_start }} {{ evpn_vpws_39.vlan_end }}"
+      register: config_vpws_ae39
+ 
+    - name: copy the output to a local file
+      copy:
+        content: "{{ config_vpws_ae39.stdout }}"
+        dest: "{{ config_filename_vpws }}"  
+
+#    - name: Apply VPWS Configuration
+#      junos_config:
+#        update: replace
+#        src: "{{ config_filename_vpws }}"
+#        src_format: set
+#      register: response
+
+######## ELAN
+    - name: Generate ae38 ELAN Config
+      command: "python3 {{ playbook_dir }}/library/evpn-elan-acx-aa.py {{ lo0 }} {{ evpn_elan_38.iface }} {{ evpn_elan_38.esi_base }} \
+                    {{ evpn_elan_38.vlan_start }} {{ evpn_elan_38.vlan_end }}"
+      register: config_elan_ae38
+ 
+    - name: copy the output to a local file
+      copy:
+        content: "{{ config_elan_ae38.stdout }}"
+        dest: "{{ config_filename_elan }}"  
+
+#    - name: Apply ELAN Configuration
+#      junos_config:
+#        update: replace
+#        src: "{{ config_filename_elan }}"
+#        src_format: set
+#      register: response
+
+    - name: Generate ae39 ELAN Config
+      command: "python3 {{ playbook_dir }}/library/evpn-elan-acx-aa.py {{ lo0 }} {{ evpn_elan_39.iface }} {{ evpn_elan_39.esi_base }} \
+                    {{ evpn_elan_39.vlan_start }} {{ evpn_elan_39.vlan_end }}"
+      register: config_elan_ae39
+ 
+    - name: copy the output to a local file
+      copy:
+        content: "{{ config_elan_ae39.stdout }}"
+        dest: "{{ config_filename_elan }}"  
+
+ #   - name: Apply ELAN Configuration
+ #     junos_config:
+ #       update: replace
+ #       src: "{{ config_filename_elan }}"
+ #       src_format: set
+ #     register: response
+
+######## L3VPN
+    - name: Generate ae38 L3VPN Config
+      command: "python3 {{ playbook_dir }}/library/l3vpn-acx-aa.py {{ lo0 }} {{ l3vpn_38.iface }} {{ l3vpn_38.esi_base }} {{ l3vpn_38.ip_base_v4 }} \
+          {{ l3vpn_38.ip_base_v6 }} {{ l3vpn_38.step }} {{ l3vpn_38.site_id }} {{ l3vpn_38.vlan_start }} {{ l3vpn_38.vlan_end }}"
+      register: config_l3vpn_ae38
+ 
+    - name: copy the output to a local file
+      copy:
+        content: "{{ config_l3vpn_ae38.stdout }}"
+        dest: "{{ config_filename_l3vpn }}"  
+
+    - name: Apply Configuration
+      junos_config:
+        update: replace
+        src: "{{ config_filename_l3vpn }}"
+        src_format: set
+      register: response
+
+    - name: Generate ae39 L3VPN Config
+      command: "python3 {{ playbook_dir }}/library/l3vpn-acx-aa.py {{ lo0 }} {{ l3vpn_39.iface }} {{ l3vpn_39.esi_base }} {{ l3vpn_39.ip_base_v4 }} \
+          {{ l3vpn_39.ip_base_v6 }} {{ l3vpn_39.step }} {{ l3vpn_39.site_id }} {{ l3vpn_39.vlan_start }} {{ l3vpn_39.vlan_end }}"
+      register: config_l3vpn_ae39
+ 
+    - name: copy the output to a local file
+      copy:
+        content: "{{ config_l3vpn_ae39.stdout }}"
+        dest: "{{ config_filename_l3vpn }}"  
+
+    - name: Apply Configuration
+      junos_config:
+        update: replace
+        src: "{{ config_filename_l3vpn }}"
+        src_format: set
+      register: response

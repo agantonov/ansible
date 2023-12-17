@@ -1,0 +1,29 @@
+#ansible-playbook -i inventory/kpn.yaml playbook/evpn-elan-acx.yaml
+---
+- name: Apply EVPN-ELAN Configuration 
+  hosts: acx
+  connection: juniper.device.pyez
+  gather_facts: false
+  tags: juniper
+
+  vars:
+    config_dir: "configs/kpn/services/evpn-elan"
+    config_filename: "{{ config_dir }}/{{ inventory_hostname }}.cfg"
+
+  tasks:
+    - name: Generate Config
+      command: "python3 {{ playbook_dir }}/library/evpn-elan-acx.py {{ lo0 }} {{ evpn_elan.iface }} {{ evpn_elan.esi_base }} \
+                    {{ evpn_elan.vlan_start }} {{ evpn_elan.vlan_end }}"
+      register: config
+ 
+    - name: copy the output to a local file
+      copy:
+        content: "{{ config.stdout }}"
+        dest: "{{ config_filename }}"  
+
+    - name: Apply Configuration
+      junos_config:
+        update: replace
+        src: "{{ config_filename }}"
+        src_format: set
+      register: response

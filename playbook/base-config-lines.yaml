@@ -1,0 +1,41 @@
+---
+- name: "Configure Juniper Devices" 
+#  hosts: acx:mx
+#  hosts: all
+  hosts: all:!qfx
+  connection: juniper.device.pyez
+  gather_facts: no
+
+  tasks:
+    - name: "Base config"
+      junos_config:
+        lines:
+#          - "set protocols lldp interface all"
+##          - "set system syslog time-format millisecond"
+#          - "set chassis aggregated-devices ethernet device-count 64"
+#          - "set policy-options policy-statement LB then load-balance per-flow"
+#          - "set routing-options autonomous-system 65100"
+#          - "set routing-options forwarding-table export LB"
+#          - "set routing-options forwarding-table chained-composite-next-hop ingress evpn"
+#          - "set groups LDP protocols ldp make-before-break"
+#          - "delete groups LDP protocols ldp preference"
+#          - "set apply-groups ISIS-GROUP"
+#          - "set groups OSPF protocols ospf preference 20"
+          - "delete apply-groups FLEX-ALGO"
+          - "delete apply-groups ISIS-GROUP"
+          - "set apply-groups OSPF"
+#           - "set groups AE-CONF protocols isis traffic-engineering l3-unicast-topology"
+#           - "set groups AE-CONF protocols isis traffic-engineering advertisement always"
+#           - "delete apply-groups AE-CONF"
+#          - "activate groups ISIS-GROUP protocols isis topologies ipv6-unicast"
+#          - "activate groups ISIS-GROUP protocols isis source-packet-routing node-segment ipv4-index"
+#          - "deactivate groups ISIS-GROUP protocols isis topologies ipv6-unicast"
+#          - "delete apply-groups LDP"
+#          - "set groups LDP protocols ldp preference 15"
+
+      register: result
+      diff: true
+
+#    - name: "Print the config changes"
+#      debug:
+#        var: result.diff_lines

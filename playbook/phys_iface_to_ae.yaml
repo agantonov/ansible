@@ -1,0 +1,28 @@
+#ansible-playbook -i inventory/kpn.yaml playbook/phys_iface_to_ae.yaml
+---
+- name: Assign Phys Interface to Bundle 
+  hosts: all:!qfx
+  connection: juniper.device.pyez
+  gather_facts: false
+  tags: juniper
+
+
+  vars:
+    config_dir: "{{ playbook_dir }}/tmp"
+    config_filename: "{{ config_dir }}/{{ inventory_hostname }}.conf"
+
+  tasks:
+    - name: Confirm/Create device configuration directory
+      file:
+          path: "{{ config_dir }}"
+          state: directory
+      run_once: yes
+#      delegate_to: localhost
+
+    - name: Build Configuration
+      template: src="phys_to_ae.j2" dest={{ config_filename }}
+
+    - name: Apply Configuration
+      junos_config:
+        src: "{{ config_filename }}"
+      register: response

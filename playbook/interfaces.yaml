@@ -1,0 +1,48 @@
+#ansible-playbook -i inventory/iface_inv.yaml playbook/interfaces.yaml
+---
+- name: Assign Phys Interface to Bundle and Configure P2P IPs
+  hosts: all
+  connection: juniper.device.pyez
+  gather_facts: false
+  tags: juniper
+
+  vars:
+    config_dir: "tmp"
+    config_filename: "{{ config_dir }}/{{ inventory_hostname }}.conf"
+
+  tasks:
+    - name: Create AE configuration directory
+      file:
+          path: "{{ config_dir }}"
+          state: directory
+      run_once: yes
+
+    - name: Build AE Configuration
+      template: src="interfaces.j2" dest={{ config_filename }}
+
+#    - name: Apply AE Configuration
+#      junos_config:
+#        src: "{{ config_filename }}"
+#      register: response
+
+    - name: Confirm/Create AE P2P IP configuration directory
+      file:
+          path: "{{ config_dir }}/p2p"
+          state: directory
+      run_once: yes
+
+    - name: Build AE P2P IP Configuration
+      command: "python3 {{ playbook_dir }}/library/p2p-ip.py {{ inventory_dir }}/interconnect.yaml"
+      register: config
+ 
+    - name: copy the output to a local file
+      copy:
+        content: "{{ config.stdout }}"
+        dest: "{{ config_filename }}"  
+
+#    - name: Apply AE P2P Configuration
+#      junos_config:
+#        update: replace
+#        src: "{{ config_filename }}"
+#        src_format: set
+#      register: response

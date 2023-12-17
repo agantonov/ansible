@@ -1,0 +1,15 @@
+interfaces {
+{% for lag in lags %}
+{% for member in lag.members %}
+    {{ member }} {
+{% if inventory_hostname.startswith('acx') %}
+        ether-options {
+{% else %}
+        gigether-options {
+{% endif %}
+            802.3ad {{ lag.name }};
+        }
+    }
+{% endfor %}
+{% endfor %}
+}
